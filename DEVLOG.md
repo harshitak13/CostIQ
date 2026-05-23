@@ -1,5 +1,25 @@
 # Dev Log — Cost IQ
 
+## Day 2 — 2026-05-23
+**Hours worked:** ~4 hours
+**What I did:** Built `pricingData.ts` with all 8 vendor tiers (prices verified from PRICING_DATA.md).
+Implemented the four-check audit engine (`runAudit()`) as a pure client-side function — seat-count
+flag, same-vendor downgrade, alternative tool switch (≥$5 threshold), and credits CTA (>$200/mo).
+Wrote 7 unit tests, all passing. Built `SpendForm` with localStorage persistence, dynamic
+plan dropdowns keyed to the selected tool, per-row validation, and a smooth scroll to results on
+submit. Wired up `page.tsx` with a polished dark hero, inline results render, stat row, testimonial,
+and FAQ accordions. Wrote full `AuditResults` component with savings banner, per-recommendation
+cards (badge + reason + savings figure), and totals footer. Updated `ARCHITECTURE.md`,
+`TESTS.md`, and `DEVLOG.md`.
+**What I learned:** The four-check priority order matters — seat-count must fire before the
+downgrade check or you get duplicate recommendations. The "already_optimal" path must be
+reached only when no other check fires, so each check uses a `handled` flag to short-circuit.
+Tailwind v4's `@import "tailwindcss"` syntax replaces the old `@tailwind` directives.
+**Blockers / what I'm stuck on:** None — all 7 tests pass, lint is clean, dev server runs.
+**Plan for tomorrow:** `AuditResults` polish + `LeadCapture` email gate, `anthropicSummary.ts`
+(server-side Anthropic call), `POST /api/audit` → Supabase persist with UUID, `POST /api/lead`
+→ Resend confirmation email, `/results/[id]` shareable page, `ShareCard` component.
+
 ## Day 1 — 2026-05-22
 **Hours worked:** ~3 hours
 **What I did:**
