@@ -1,10 +1,12 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import type { AuditResult, AuditRecommendation } from '@/lib/auditEngine'
 import { PRICING } from '@/lib/pricingData'
 
 type Props = {
   result: AuditResult
+  onLeadCapture?: (auditId: string) => void
 }
 
 const ACTION_META: Record<
@@ -32,14 +34,36 @@ function fmt(n: number) {
   return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-export default function AuditResults({ result }: Props) {
+export default function AuditResults({ result, onLeadCapture }: Props) {
+  const [summary, setSummary]   = useState<string | null>(null)
+  const [loading, setLoading]   = useState(true)
+
   const hasRealSavings = result.totalMonthlySavings > 0
+  const isSpendingWell = result.totalMonthlySavings < 100
+  const showCredexCTA  = result.totalMonthlySavings > 500
   const actionableRecs = result.recommendations.filter(
     r => r.recommendedAction !== 'already_optimal'
   )
   const optimalRecs = result.recommendations.filter(
     r => r.recommendedAction === 'already_optimal'
   )
+
+  // POST to /api/audit on mount to save result + get AI summary + UUID
+  useEffect(() => {
+    fetch('/api/audit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(result),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.id) onLeadCapture?.(data.id)
+        if (data.summary) setSummary(data.summary)
+      })
+      .catch(() => setSummary(null))
+      .finally(() => setLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <section
@@ -85,6 +109,28 @@ export default function AuditResults({ result }: Props) {
           </>
         )}
       </div>
+
+      {/* ── AI summary blockquote ── */}
+      {loading ? (
+        <div
+          className="card space-y-3"
+          aria-label="Loading summary"
+        >
+          <div className="skeleton-line w-full" />
+          <div className="skeleton-line w-11/12" />
+          <div className="skeleton-line w-9/12" />
+        </div>
+      ) : summary ? (
+        <blockquote className="card border-l-4 border-indigo-500/60 italic text-zinc-300 text-sm leading-relaxed animate-fade-up">
+          <p className="flex items-start gap-2">
+            <span className="text-indigo-400 text-lg mt-[-2px] flex-shrink-0">✦</span>
+            {summary}
+          </p>
+          <footer className="mt-3 text-xs text-zinc-500 not-italic">
+            — AI-generated audit summary
+          </footer>
+        </blockquote>
+      ) : null}
 
       {/* ── Actionable recommendations ── */}
       {actionableRecs.length > 0 && (
@@ -165,8 +211,55 @@ export default function AuditResults({ result }: Props) {
         </div>
       )}
 
+      {/* ── Credex CTA — high savings (>$500/mo) ── */}
+      {showCredexCTA && (
+        <div className="card relative overflow-hidden border-indigo-500/30">
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(ellipse 70% 60% at 50% 120%, rgba(99,102,241,0.15) 0%, transparent 70%)',
+            }}
+          />
+          <div className="relative space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-semibold text-indigo-300">
+              💳 Credex Credits
+            </div>
+            <h3 className="text-zinc-100 text-lg font-bold">
+              You could save ${fmt(result.totalMonthlySavings)} more with Credex credits
+            </h3>
+            <p className="text-zinc-400 text-sm leading-relaxed max-w-xl">
+              Credex sells discounted AI infrastructure credits — Cursor, Claude,
+              ChatGPT Enterprise and others — sourced from companies that
+              overforecast. Real discounts, same tools.
+            </p>
+            <a
+              href="https://credex.rocks"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cta-btn inline-flex mt-1"
+            >
+              Book a free Credex consultation →
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* ── Spending well — low savings (<$100/mo) ── */}
+      {isSpendingWell && (
+        <div className="card text-center space-y-2">
+          <p className="text-3xl">🎯</p>
+          <h3 className="text-zinc-100 font-bold">You&apos;re spending well on AI.</h3>
+          <p className="text-zinc-400 text-sm leading-relaxed max-w-md mx-auto">
+            No significant overspend detected in your current stack.
+            We&apos;ll notify you when new optimisations apply to your tools.
+          </p>
+        </div>
+      )}
+
       {/* ── Totals footer ── */}
-      {hasRealSavings && (
+      {hasRealSavings && !isSpendingWell && (
         <div className="rounded-xl border border-zinc-700/50 bg-zinc-900/40 px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <p className="text-xs text-zinc-500 uppercase tracking-widest font-semibold mb-0.5">

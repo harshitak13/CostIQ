@@ -1,5 +1,35 @@
 # Dev Log — Cost IQ
 
+## Day 3 — 2026-05-24
+**Hours worked:** ~4 hours
+**What I did:** Implemented AuditResults UI with per-tool cards,
+hero savings numbers, AI summary blockquote with skeleton loader,
+Credex CTA (>$500), and spending-well variant (<$100).
+Built Anthropic summary generation (`anthropicSummary.ts`) with
+`claude-sonnet-4-20250514`, 8s timeout, and meaningful templated fallback.
+Wired up Supabase for audit + lead storage via `@supabase/supabase-js`.
+Built `POST /api/audit` (save result → generate summary → return UUID).
+Built `POST /api/lead` with honeypot field and in-memory IP rate limiter
+(3 per hour). Created `lib/email.ts` for Resend confirmation emails with
+dynamic subject lines and Credex specialist mention for high-value leads.
+Built `LeadCapture.tsx` email gate with honeypot, disabled-during-flight
+button, and shareable URL on success. Wired LeadCapture into page.tsx
+via onLeadCapture callback. Updated PROMPTS.md with full prompt text,
+variable table, design rationale, and what didn't work.
+**What I learned:** The Anthropic API fallback strategy is important —
+the templated fallback must be meaningful enough that users don't notice
+when the API is down. Using `AbortSignal.timeout(8000)` provides a clean
+way to handle slow responses without manual setTimeout/AbortController.
+In-memory rate limiting is sufficient for MVP but resets on server restart;
+production needs Redis (Upstash). Honeypot fields work because bots fill
+all form fields — real users never see the hidden field.
+**Blockers / what I'm stuck on:** Supabase tables (`audits`, `leads`)
+need to be created manually in the dashboard before the API routes work.
+No `.env` values configured yet for Supabase/Anthropic/Resend.
+**Plan for tomorrow:** Shareable URLs (`/results/[id]` page fetching
+from Supabase), OG tags with dynamic metadata, ShareCard component,
+UI polish, Lighthouse audit, ECONOMICS.md and METRICS.md.
+
 ## Day 2 — 2026-05-23
 **Hours worked:** ~4 hours
 **What I did:** Built `pricingData.ts` with all 8 vendor tiers (prices verified from PRICING_DATA.md).

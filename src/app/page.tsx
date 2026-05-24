@@ -3,10 +3,12 @@
 import { useState } from 'react'
 import SpendForm from '@/components/SpendForm'
 import AuditResults from '@/components/AuditResults'
+import LeadCapture from '@/components/LeadCapture'
 import type { AuditResult } from '@/lib/auditEngine'
 
 export default function Home() {
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null)
+  const [auditId, setAuditId] = useState<string | null>(null)
 
   // Design decision: results render inline below the form (no navigation).
   // Rationale documented in ARCHITECTURE.md — the audit is instant and
@@ -61,8 +63,17 @@ export default function Home() {
 
       {/* ── Results ─────────────────────────────────────────────────── */}
       {auditResult && (
-        <section className="w-full max-w-3xl mt-8">
-          <AuditResults result={auditResult} />
+        <section className="w-full max-w-3xl mt-8 space-y-8">
+          <AuditResults
+            result={auditResult}
+            onLeadCapture={setAuditId}
+          />
+          {auditId && (
+            <LeadCapture
+              auditId={auditId}
+              totalMonthlySavings={auditResult.totalMonthlySavings}
+            />
+          )}
         </section>
       )}
 
