@@ -17,7 +17,7 @@ export default function Home() {
   // after the lead is captured and the result is persisted to Supabase.
 
   return (
-    <main className="flex flex-col items-center min-h-screen px-4 pb-24">
+    <main id="main-content" className="flex flex-col items-center min-h-screen max-w-2xl mx-auto px-4 py-12 sm:px-6 lg:px-8 pb-24">
 
       {/* ── Nav ─────────────────────────────────────────────────────── */}
       <nav className="w-full max-w-3xl flex items-center justify-between py-5">

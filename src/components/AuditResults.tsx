@@ -89,7 +89,7 @@ export default function AuditResults({ result, onLeadCapture }: Props) {
 
         {hasRealSavings ? (
           <>
-            <p className="savings-big">${fmt(result.totalMonthlySavings)}</p>
+            <p className="savings-big text-4xl sm:text-6xl">${fmt(result.totalMonthlySavings)}</p>
             <p className="text-zinc-300 text-lg font-medium">
               potential monthly savings&nbsp;
               <span className="text-zinc-500 text-sm font-normal">
@@ -114,7 +114,9 @@ export default function AuditResults({ result, onLeadCapture }: Props) {
       {loading ? (
         <div
           className="card space-y-3"
-          aria-label="Loading summary"
+          style={{ minHeight: '80px' }}
+          aria-label="Loading AI summary"
+          role="status"
         >
           <div className="skeleton-line w-full" />
           <div className="skeleton-line w-11/12" />
@@ -148,9 +150,10 @@ export default function AuditResults({ result, onLeadCapture }: Props) {
                 : undefined
 
             return (
-              <div
+              <article
                 key={i}
                 className="card-raised flex flex-col sm:flex-row sm:items-start gap-4"
+                aria-label={`Audit result for ${TOOL_LABELS[rec.tool] ?? rec.tool}`}
               >
                 {/* left: icon + badges */}
                 <div className="flex-shrink-0 flex flex-col items-start gap-2">
@@ -162,14 +165,14 @@ export default function AuditResults({ result, onLeadCapture }: Props) {
 
                 {/* middle: text */}
                 <div className="flex-1 space-y-1.5">
-                  <p className="font-semibold text-zinc-100">
+                  <h3 className="font-semibold text-zinc-100">
                     {vendor}
                     {altVendor && (
                       <span className="text-zinc-400 font-normal">
                         {' '}→ {altVendor}
                       </span>
                     )}
-                  </p>
+                  </h3>
                   <p className="text-sm text-zinc-400 leading-relaxed">{rec.reason}</p>
                 </div>
 
@@ -182,7 +185,7 @@ export default function AuditResults({ result, onLeadCapture }: Props) {
                     <p className="text-xs text-zinc-500">/month</p>
                   </div>
                 )}
-              </div>
+              </article>
             )
           })}
         </div>
@@ -198,13 +201,14 @@ export default function AuditResults({ result, onLeadCapture }: Props) {
             {optimalRecs.map((rec, i) => {
               const vendor = PRICING[rec.tool]?.vendor ?? TOOL_LABELS[rec.tool] ?? rec.tool
               return (
-                <div
+                <article
                   key={i}
                   className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3"
+                  aria-label={`Audit result for ${TOOL_LABELS[rec.tool] ?? rec.tool}`}
                 >
                   <span className="text-emerald-400 text-base">✓</span>
-                  <span className="text-sm text-zinc-300">{vendor}</span>
-                </div>
+                  <h3 className="text-sm text-zinc-300 font-medium">{vendor}</h3>
+                </article>
               )
             })}
           </div>

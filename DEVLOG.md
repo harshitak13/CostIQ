@@ -1,5 +1,35 @@
 # Dev Log — Cost IQ
 
+## Day 4 — 2026-05-25
+**Hours worked:** ~4 hours
+**What I did:** Implemented shareable result page at /results/[id]
+with Supabase fetch, PII stripping, and read-only per-tool breakdown.
+Built dynamic OG image via Next.js ImageResponse (opengraph-image.tsx)
+with 1200×630 dark card showing savings figure and Cost IQ branding.
+Implemented ShareCard component with copy-to-clipboard link and X share
+intent, dark bg-zinc-900 card designed for screenshot sharing.
+Applied responsive layout (max-w-2xl container, mobile stacking) and
+a11y fixes across all components: sr-only labels on LeadCapture inputs,
+aria-label on AuditResults article cards with semantic h3 headings,
+skip-to-main link in layout.tsx, skeleton min-height for CLS prevention,
+aria-label on ShareCard copy button. Added sr-only CSS utility class.
+Wrote ECONOMICS.md with full funnel math ($800 blended lead value,
+0.59% visit-to-purchase rate, $1M ARR model needing 1,250 customers).
+Wrote METRICS.md with North Star metric (qualified leads/week),
+3 input metrics, instrumentation plan, and pivot trigger.
+Lighthouse scores: Performance [pending deploy], Accessibility [pending deploy],
+Best Practices [pending deploy] — will record after Vercel deploy.
+**What I learned:** Next.js 15+ requires params to be awaited as a Promise
+in both page components and generateMetadata. The opengraph-image.tsx
+convention auto-generates OG images per route segment — no manual
+og:image meta tag needed. Tailwind v4 may not include sr-only utility
+by default, so a custom CSS class is needed for screen reader support.
+**Blockers / what I'm stuck on:** Cannot run Lighthouse until deployed
+to Vercel (localhost doesn't support OG image testing). Need to verify
+Supabase connection works with real env vars before full QA.
+**Plan for tomorrow:** Full QA pass, complete README and REFLECTION,
+confirm CI green, submit Google Form.
+
 ## Day 3 — 2026-05-24
 **Hours worked:** ~4 hours
 **What I did:** Implemented AuditResults UI with per-tool cards,

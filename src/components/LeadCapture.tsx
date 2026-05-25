@@ -97,6 +97,7 @@ export default function LeadCapture({ auditId, totalMonthlySavings }: Props) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="sm:col-span-2">
+          <label htmlFor="lead-email" className="sr-only">Work email</label>
           <input
             id="lead-email"
             type="email"
@@ -107,31 +108,40 @@ export default function LeadCapture({ auditId, totalMonthlySavings }: Props) {
             className="input-field"
           />
         </div>
-        <input
-          id="lead-company"
-          type="text"
-          placeholder="Company name (optional)"
-          value={company}
-          onChange={e => setCompany(e.target.value)}
-          className="input-field"
-        />
-        <input
-          id="lead-role"
-          type="text"
-          placeholder="Your role (optional)"
-          value={role}
-          onChange={e => setRole(e.target.value)}
-          className="input-field"
-        />
-        <input
-          id="lead-team-size"
-          type="number"
-          placeholder="Team size (optional)"
-          value={teamSize}
-          onChange={e => setTeamSize(e.target.value)}
-          min={1}
-          className="input-field"
-        />
+        <div>
+          <label htmlFor="lead-company" className="sr-only">Company name</label>
+          <input
+            id="lead-company"
+            type="text"
+            placeholder="Company name (optional)"
+            value={company}
+            onChange={e => setCompany(e.target.value)}
+            className="input-field"
+          />
+        </div>
+        <div>
+          <label htmlFor="lead-role" className="sr-only">Your role</label>
+          <input
+            id="lead-role"
+            type="text"
+            placeholder="Your role (optional)"
+            value={role}
+            onChange={e => setRole(e.target.value)}
+            className="input-field"
+          />
+        </div>
+        <div>
+          <label htmlFor="lead-team-size" className="sr-only">Team size</label>
+          <input
+            id="lead-team-size"
+            type="number"
+            placeholder="Team size (optional)"
+            value={teamSize}
+            onChange={e => setTeamSize(e.target.value)}
+            min={1}
+            className="input-field"
+          />
+        </div>
       </div>
 
       <button
