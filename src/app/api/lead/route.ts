@@ -13,11 +13,13 @@ import { sendConfirmationEmail } from '@/lib/email'
 
 let _supabase: SupabaseClient | null = null
 function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) {
+    return null
+  }
   if (!_supabase) {
-    _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    _supabase = createClient(url, key)
   }
   return _supabase
 }
@@ -67,27 +69,37 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Save lead to Supabase
-    const { error } = await getSupabase().from('leads').insert({
-      email,
-      company_name: companyName ?? null,
-      role: role ?? null,
-      team_size: teamSize ?? null,
-      audit_id: auditId,
-      total_monthly_savings: totalMonthlySavings,
-      is_high_value: totalMonthlySavings > 500,
-      created_at: new Date().toISOString(),
-    })
+    const supabase = getSupabase()
+    if (supabase) {
+      const { error } = await supabase.from('leads').insert({
+        email,
+        company_name: companyName ?? null,
+        role: role ?? null,
+        team_size: teamSize ?? null,
+        audit_id: auditId,
+        total_monthly_savings: totalMonthlySavings,
+        is_high_value: totalMonthlySavings > 500,
+        created_at: new Date().toISOString(),
+      })
 
-    if (error) throw error
+      if (error) {
+        console.error('Failed to save lead to Supabase:', error)
+      }
+    } else {
+      console.warn('Supabase not configured. Skipping saving lead.')
+    }
 
     // Send confirmation email (logs but does not throw on failure)
-    await sendConfirmationEmail({
-      to: email,
-      totalMonthlySavings,
-      auditId,
-      isHighValue: totalMonthlySavings > 500,
-    })
+    try {
+      await sendConfirmationEmail({
+        to: email,
+        totalMonthlySavings,
+        auditId,
+        isHighValue: totalMonthlySavings > 500,
+      })
+    } catch (emailErr) {
+      console.error('Failed to send confirmation email:', emailErr)
+    }
 
     return NextResponse.json({ ok: true })
   } catch (err) {

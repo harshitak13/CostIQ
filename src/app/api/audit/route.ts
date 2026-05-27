@@ -5,13 +5,17 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { generateAuditSummary } from '@/lib/anthropicSummary'
 import type { AuditResult } from '@/lib/auditEngine'
 
+import { randomUUID } from 'crypto'
+
 let _supabase: SupabaseClient | null = null
 function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) {
+    return null
+  }
   if (!_supabase) {
-    _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    _supabase = createClient(url, key)
   }
   return _supabase
 }
@@ -37,16 +41,27 @@ export async function POST(req: NextRequest) {
       created_at: new Date().toISOString(),
     }
 
-    const { data, error } = await getSupabase()
-      .from('audits')
-      .insert(publicResult)
-      .select('id')
-      .single()
+    let auditId = randomUUID()
+    const supabase = getSupabase()
 
-    if (error) throw error
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('audits')
+        .insert(publicResult)
+        .select('id')
+        .single()
+
+      if (error) {
+        console.error('Failed to insert audit into Supabase:', error)
+      } else if (data?.id) {
+        auditId = data.id
+      }
+    } else {
+      console.warn('Supabase not configured. Using fallback generated random UUID for auditId.')
+    }
 
     return NextResponse.json({
-      id: data.id,
+      id: auditId,
       summary,
       result: resultWithSummary,
     })
