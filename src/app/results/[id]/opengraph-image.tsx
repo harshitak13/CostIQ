@@ -17,20 +17,27 @@ export default async function OGImage({
   let annual = 0
 
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!url || !key) {
+      throw new Error('Supabase environment variables are not set.')
+    }
+    const supabase = createClient(url, key)
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('audits')
       .select('total_monthly_savings, total_annual_savings, summary')
       .eq('id', id)
       .single()
 
-    monthly = data?.total_monthly_savings ?? 0
-    annual  = data?.total_annual_savings  ?? 0
-  } catch {
+    if (error) {
+      console.error(`[OGImage] Supabase error:`, error)
+    } else if (data) {
+      monthly = data.total_monthly_savings ?? 0
+      annual  = data.total_annual_savings  ?? 0
+    }
+  } catch (err) {
+    console.error(`[OGImage] Exception:`, err)
     // If Supabase is not configured, render a fallback OG image
   }
   const hasSavings = monthly > 0

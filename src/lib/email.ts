@@ -15,7 +15,8 @@ export async function sendConfirmationEmail({
   auditId,
   isHighValue,
 }: ConfirmationEmailParams): Promise<void> {
-  const shareUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/results/${auditId}`
+  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? '').replace(/\/+$/, '')
+  const shareUrl = `${baseUrl}/results/${auditId}`
 
   const savingsText =
     totalMonthlySavings > 0

@@ -9,21 +9,32 @@ type Props = {
 }
 
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) {
+    throw new Error('Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY) are missing.')
+  }
+  return createClient(url, key)
 }
 
 async function getAudit(id: string): Promise<AuditResult | null> {
   try {
-    const { data, error } = await getSupabase()
+    const supabase = getSupabase()
+    const { data, error } = await supabase
       .from('audits')
       .select('*')
       .eq('id', id)
       .single()
 
-    if (error || !data) return null
+    if (error) {
+      console.error(`[getAudit] Supabase error fetching audit ID ${id}:`, error)
+      return null
+    }
+
+    if (!data) {
+      console.error(`[getAudit] No audit found in DB for ID ${id}`)
+      return null
+    }
 
     // Map snake_case DB columns back to camelCase AuditResult shape
     return {
@@ -36,7 +47,8 @@ async function getAudit(id: string): Promise<AuditResult | null> {
       totalAnnualSavings: data.total_annual_savings,
       summary: data.summary,
     }
-  } catch {
+  } catch (err) {
+    console.error(`[getAudit] Exception fetching audit ID ${id}:`, err)
     return null
   }
 }
@@ -106,7 +118,8 @@ export default async function ResultPage({ params }: Props) {
   const audit = await getAudit(id)
   if (!audit) notFound()
 
-  const shareUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/results/${audit.id}`
+  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? '').replace(/\/+$/, '')
+  const shareUrl = `${baseUrl}/results/${audit.id}`
 
   const actionableRecs = audit.recommendations.filter(
     (r: AuditRecommendation) => r.recommendedAction !== 'already_optimal'
