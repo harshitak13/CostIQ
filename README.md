@@ -21,7 +21,10 @@ https://cost-iq-lovat.vercel.app/
 
 ### Shareable result page at /results/:id
 
-![Shareable results page](./screenshots/share-page.png)
+![Shareable results page](./screenshots/shareable_1.png)
+![Shareable results page](./screenshots/shareable_2.png)
+![Shareable results page](./screenshots/shareable_3.png)
+![Shareable results page](./screenshots/shareable_4.png)
 
 ## Quick start
 
