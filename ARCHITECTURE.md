@@ -46,8 +46,18 @@ The audit engine is a **stateless pure function** — it runs in the user's brow
 Server-side load is limited to:
 
 - **`POST /api/audit`** — one Supabase `INSERT` per audit saved (after email gate). At 10k/day ≈ 7 req/sec, well within Supabase free tier (500 req/sec).
-- **Anthropic API** — one `claude-haiku` call per audit for the summary paragraph (~200 output tokens). At 10k/day and $0.80/1M input tokens, estimated cost: ~$0.50/day.
+- **Anthropic API** — one `claude-sonnet-4-20250514` call per audit for the summary paragraph (~200 output tokens). At 10k/day and $3.00/1M input tokens, estimated cost: ~$2/day.
 - **Resend** — one email per lead. 10k/day requires Resend Pro ($20/month, 50k emails/month).
 
-Bottleneck is the Anthropic API (rate limit: 4,000 req/min on Tier 1 → ~66/sec → headroom at 10k/day).
-Mitigation: queue summary generation via Supabase Edge Functions and deliver asynchronously.
+Current bottleneck: the Anthropic API call in `POST /api/audit`. At 10k audits/day (~7 audits/minute peak), this becomes 7 concurrent Anthropic requests per minute — well within API rate limits but adds ~3–8s latency to every audit save.
+
+Changes needed at scale:
+
+1. **Move summary generation to a background job** (Inngest or a Supabase Edge Function) — return the UUID immediately after the Supabase insert, generate the summary asynchronously, and poll or push the summary to the client separately. This removes the 8s blocking wait from the user's critical path.
+
+2. **Replace in-memory rate limiter with Upstash Redis sliding window** — the current `Map` in `/api/lead/route.ts` resets on every serverless cold start, making it trivially bypassable under Vercel's auto-scaling. Upstash Redis provides a persistent sliding window with a single HTTP call per check.
+
+3. **Add a CDN cache layer on `/results/[id]`** — audit results are immutable once saved. A 24-hour `Cache-Control: s-maxage=86400, stale-while-revalidate` header on the results page eliminates the Supabase read on every share link open. At 10k shared URLs/day, this removes ~10k DB reads daily.
+
+4. **Connection pooling via Supabase's pgBouncer** — serverless functions open a new DB connection per invocation at high concurrency. At 7 req/sec, this can exhaust Postgres connection limits. Supabase offers pgBouncer pooling on port 6543 with zero config.
+

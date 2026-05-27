@@ -1,5 +1,18 @@
 # Dev Log — Cost IQ
 
+## Day 5 — 2026-05-27
+**Hours worked:** ~4 hours
+**What I did:** Full end-to-end QA pass across happy path and edge cases. Fixed env variable naming bug in email.ts. Added custom 404 not-found page matching the app's dark theme. Confirmed CI green: lint (0 errors), tests (7/7 passing), production build (zero errors). Completed README.md with live URL, screenshots section, quick start, env vars table, and 5 design decisions. Completed REFLECTION.md with all 5 answers (hardest bug, reversed decision, week 2 features, AI tool usage, self-ratings). Updated ARCHITECTURE.md scaling section with detailed changes needed at 10k audits/day (background jobs, Redis, CDN cache, connection pooling). Filled GTM.md with target user, distribution channels, first 100 users plan, and week-1 projections. Filled LANDING_COPY.md with headline, CTA, social proof, and complete FAQ answers. Verified all 13 markdown files are complete with no stubs. Confirmed git log shows commits on 5+ distinct calendar days.
+
+**Bugs found and fixed:**
+- **Bug 1: Broken share URL in confirmation emails** — `email.ts` used `process.env.NEXT_PUBLIC_APP_URL` but the actual env variable is `NEXT_PUBLIC_BASE_URL`. This caused the share link in Resend emails to resolve to `undefined/results/...`. Fixed by changing to `NEXT_PUBLIC_BASE_URL` to match `.env.example` and all other code. Root cause: copy-paste naming mismatch between files, not caught by TypeScript because `process.env` properties are `string | undefined` by default.
+- **Bug 2: No custom 404 page** — navigating to `/results/invalid-uuid` showed the default Next.js 404 page (plain white, no branding). Fixed by creating `src/app/not-found.tsx` with the app's dark theme, gradient "404" heading, and a CTA to run a new audit.
+
+**What I learned:** End-to-end testing is not optional — the env variable bug only surfaced when testing the complete flow (audit → lead → email → click link). Unit tests and type checks don't catch environment variable naming mismatches. A grep for env variable names across the entire codebase should be a pre-deployment checklist item.
+**Blockers / what I'm stuck on:** None — submitted.
+**Plan for tomorrow:** Wait for Round 2 invitation.
+
+
 ## Day 4 — 2026-05-25
 **Hours worked:** ~4 hours
 **What I did:** Implemented shareable result page at /results/[id]
