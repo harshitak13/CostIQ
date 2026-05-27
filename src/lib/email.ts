@@ -50,7 +50,7 @@ export async function sendConfirmationEmail({
       Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
     },
     body: JSON.stringify({
-      from: 'Cost IQ <audit@costiq.app>',
+      from: 'Cost IQ <onboarding@resend.dev>',
       to,
       subject:
         totalMonthlySavings > 0
