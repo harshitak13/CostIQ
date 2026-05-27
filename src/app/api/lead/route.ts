@@ -8,18 +8,14 @@
 //    Production alternative: Upstash Redis with sliding window.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { getServiceSupabaseClient } from '@/lib/supabaseClient'
 import { sendConfirmationEmail } from '@/lib/email'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 let _supabase: SupabaseClient | null = null
 function getSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) {
-    return null
-  }
   if (!_supabase) {
-    _supabase = createClient(url, key)
+    _supabase = getServiceSupabaseClient()
   }
   return _supabase
 }
@@ -58,7 +54,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
-  const { email, companyName, role, teamSize, auditId, totalMonthlySavings } =
+  const { email, companyName, role, teamSize, auditId, totalMonthlySavings, shareUrl } =
     body
 
   if (!email || !auditId) {
@@ -95,6 +91,7 @@ export async function POST(req: NextRequest) {
         to: email,
         totalMonthlySavings,
         auditId,
+        shareUrl,
         isHighValue: totalMonthlySavings > 500,
       })
     } catch (emailErr) {

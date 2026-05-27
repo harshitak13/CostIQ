@@ -1,13 +1,25 @@
 'use client'
 
 import { useState } from 'react'
+import type { AuditResult } from '@/lib/auditEngine'
+import {
+  encodeShareReportPayload,
+  shareReportStorageKey,
+} from '@/lib/shareReportPayload'
 
 type Props = {
   auditId: string
+  report: AuditResult
+  persisted: boolean
   totalMonthlySavings: number
 }
 
-export default function LeadCapture({ auditId, totalMonthlySavings }: Props) {
+export default function LeadCapture({
+  auditId,
+  report,
+  persisted,
+  totalMonthlySavings,
+}: Props) {
   const [submitted, setSubmitted] = useState(false)
   const [loading,   setLoading]   = useState(false)
   const [email,     setEmail]     = useState('')
@@ -18,9 +30,34 @@ export default function LeadCapture({ auditId, totalMonthlySavings }: Props) {
 
   const isHighValue = totalMonthlySavings > 500
 
+  function buildShareUrl() {
+    const cleanUrl = typeof window !== 'undefined'
+      ? `${window.location.origin}/results/${auditId}`
+      : `/results/${auditId}`
+
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem(
+          shareReportStorageKey(auditId),
+          JSON.stringify(report)
+        )
+      } catch {
+        // The URL hash fallback still works when localStorage is blocked.
+      }
+    }
+
+    if (persisted) {
+      return cleanUrl
+    }
+
+    return `${cleanUrl}#report=${encodeShareReportPayload(report)}`
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
+
+    const shareUrl = buildShareUrl()
 
     await fetch('/api/lead', {
       method: 'POST',
@@ -32,6 +69,7 @@ export default function LeadCapture({ auditId, totalMonthlySavings }: Props) {
         teamSize:    teamSize ? Number(teamSize) : undefined,
         auditId,
         totalMonthlySavings,
+        shareUrl,
         website: honeypot, // honeypot — backend drops if non-empty
       }),
     })
@@ -41,9 +79,8 @@ export default function LeadCapture({ auditId, totalMonthlySavings }: Props) {
   }
 
   if (submitted) {
-    const shareUrl = typeof window !== 'undefined'
-      ? `${window.location.origin}/results/${auditId}`
-      : `/results/${auditId}`
+    const shareUrl = buildShareUrl()
+    const displayUrl = shareUrl.split('#')[0]
 
     return (
       <div className="card text-center space-y-4 animate-fade-up">
@@ -55,7 +92,7 @@ export default function LeadCapture({ auditId, totalMonthlySavings }: Props) {
             href={shareUrl}
             className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 transition-colors break-all"
           >
-            {shareUrl}
+            {displayUrl}
           </a>
         </p>
         {isHighValue && (

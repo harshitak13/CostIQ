@@ -6,9 +6,20 @@ import AuditResults from '@/components/AuditResults'
 import LeadCapture from '@/components/LeadCapture'
 import type { AuditResult } from '@/lib/auditEngine'
 
+type SavedAudit = {
+  id: string
+  result: AuditResult
+  persisted: boolean
+}
+
 export default function Home() {
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null)
-  const [auditId, setAuditId] = useState<string | null>(null)
+  const [savedAudit, setSavedAudit] = useState<SavedAudit | null>(null)
+
+  function handleAuditComplete(result: AuditResult) {
+    setAuditResult(result)
+    setSavedAudit(null)
+  }
 
   // Design decision: results render inline below the form (no navigation).
   // Rationale documented in ARCHITECTURE.md — the audit is instant and
@@ -57,7 +68,7 @@ export default function Home() {
               browser — nothing is sent to a server until you share your results.
             </p>
           </div>
-          <SpendForm onAuditComplete={setAuditResult} />
+          <SpendForm onAuditComplete={handleAuditComplete} />
         </div>
       </section>
 
@@ -66,11 +77,13 @@ export default function Home() {
         <section className="w-full max-w-3xl mt-8 space-y-8">
           <AuditResults
             result={auditResult}
-            onLeadCapture={setAuditId}
+            onAuditSaved={setSavedAudit}
           />
-          {auditId && (
+          {savedAudit && (
             <LeadCapture
-              auditId={auditId}
+              auditId={savedAudit.id}
+              report={savedAudit.result}
+              persisted={savedAudit.persisted}
               totalMonthlySavings={auditResult.totalMonthlySavings}
             />
           )}

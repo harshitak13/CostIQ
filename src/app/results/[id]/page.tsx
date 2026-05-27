@@ -1,6 +1,6 @@
-import { notFound } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
 import ShareCard from '@/components/ShareCard'
+import ResultFallback from '@/components/ResultFallback'
+import { getReadSupabaseClient } from '@/lib/supabaseClient'
 import type { AuditResult, AuditRecommendation } from '@/lib/auditEngine'
 import type { Metadata } from 'next'
 
@@ -9,12 +9,11 @@ type Props = {
 }
 
 function getSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) {
-    throw new Error('Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY) are missing.')
+  const supabase = getReadSupabaseClient()
+  if (!supabase) {
+    throw new Error('Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY) are missing.')
   }
-  return createClient(url, key)
+  return supabase
 }
 
 async function getAudit(id: string): Promise<AuditResult | null> {
@@ -116,7 +115,23 @@ function fmt(n: number) {
 export default async function ResultPage({ params }: Props) {
   const { id } = await params
   const audit = await getAudit(id)
-  if (!audit) notFound()
+  if (!audit) {
+    return (
+      <main
+        id="main-content"
+        className="max-w-2xl mx-auto px-4 py-12 sm:px-6 lg:px-8 space-y-8 animate-fade-up"
+      >
+        <nav className="flex items-center justify-between">
+          <a href={process.env.NEXT_PUBLIC_BASE_URL ?? '/'} className="font-extrabold text-lg tracking-tight gradient-text">
+            Cost IQ
+          </a>
+          <span className="badge badge-indigo">Shared audit</span>
+        </nav>
+
+        <ResultFallback auditId={id} />
+      </main>
+    )
+  }
 
   const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? '').replace(/\/+$/, '')
   const shareUrl = `${baseUrl}/results/${audit.id}`

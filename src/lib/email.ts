@@ -6,6 +6,7 @@ type ConfirmationEmailParams = {
   to: string
   totalMonthlySavings: number
   auditId: string
+  shareUrl?: string
   isHighValue: boolean
 }
 
@@ -13,10 +14,11 @@ export async function sendConfirmationEmail({
   to,
   totalMonthlySavings,
   auditId,
+  shareUrl,
   isHighValue,
 }: ConfirmationEmailParams): Promise<void> {
   const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? '').replace(/\/+$/, '')
-  const shareUrl = `${baseUrl}/results/${auditId}`
+  const reportUrl = shareUrl ?? `${baseUrl}/results/${auditId}`
 
   const savingsText =
     totalMonthlySavings > 0
@@ -32,7 +34,7 @@ export async function sendConfirmationEmail({
       <h2 style="color:#1a1a2e;font-size:22px;margin-bottom:16px">Your Cost IQ audit is ready</h2>
       <p style="font-size:15px;line-height:1.6;color:#374151">${savingsText}</p>
       <p style="margin-top:20px">
-        <a href="${shareUrl}" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px">
+        <a href="${reportUrl}" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px">
           View your full audit report →
         </a>
       </p>

@@ -11,12 +11,16 @@ https://cost-iq-lovat.vercel.app/
 ## Screenshots
 
 ### Spend input form with multiple tools added
-![Spend input form](./screenshots/spend-form.png)
+
+![Spend input form](./screenshots/send_input.jpg)
 
 ### Audit results with per-tool breakdown and savings hero
-![Audit results](./screenshots/audit-results.png)
+
+![Audit results](./screenshots/audit_results_1.jpg)
+![Audit results](./screenshots/audit_results_2.jpg)
 
 ### Shareable result page at /results/:id
+
 ![Shareable results page](./screenshots/share-page.png)
 
 ## Quick start
@@ -34,13 +38,13 @@ Open http://localhost:3000
 
 ## Environment variables
 
-| Variable | Where to get it |
-|----------|----------------|
-| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com) |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project settings → API |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase project settings → API (service_role) |
-| `RESEND_API_KEY` | [resend.com/api-keys](https://resend.com/api-keys) |
-| `NEXT_PUBLIC_BASE_URL` | Your deployed URL (e.g. `https://cost-iq-lovat.vercel.app`) |
+| Variable                    | Where to get it                                             |
+| --------------------------- | ----------------------------------------------------------- |
+| `ANTHROPIC_API_KEY`         | [console.anthropic.com](https://console.anthropic.com)      |
+| `NEXT_PUBLIC_SUPABASE_URL`  | Supabase project settings → API                             |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase project settings → API (service_role)              |
+| `RESEND_API_KEY`            | [resend.com/api-keys](https://resend.com/api-keys)          |
+| `NEXT_PUBLIC_BASE_URL`      | Your deployed URL (e.g. `https://cost-iq-lovat.vercel.app`) |
 
 ## Run tests
 

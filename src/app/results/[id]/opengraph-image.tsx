@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og'
-import { createClient } from '@supabase/supabase-js'
+import { getReadSupabaseClient } from '@/lib/supabaseClient'
 
 export const runtime = 'edge'
 export const alt = 'Cost IQ Audit Result'
@@ -17,12 +17,10 @@ export default async function OGImage({
   let annual = 0
 
   try {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!url || !key) {
+    const supabase = getReadSupabaseClient()
+    if (!supabase) {
       throw new Error('Supabase environment variables are not set.')
     }
-    const supabase = createClient(url, key)
 
     const { data, error } = await supabase
       .from('audits')

@@ -6,7 +6,7 @@ import { PRICING } from '@/lib/pricingData'
 
 type Props = {
   result: AuditResult
-  onLeadCapture?: (auditId: string) => void
+  onAuditSaved?: (savedAudit: { id: string; result: AuditResult; persisted: boolean }) => void
 }
 
 const ACTION_META: Record<
@@ -34,8 +34,9 @@ function fmt(n: number) {
   return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-export default function AuditResults({ result, onLeadCapture }: Props) {
+export default function AuditResults({ result, onAuditSaved }: Props) {
   const [summary, setSummary]   = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [loading, setLoading]   = useState(true)
 
   const hasRealSavings = result.totalMonthlySavings > 0
@@ -55,12 +56,31 @@ export default function AuditResults({ result, onLeadCapture }: Props) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(result),
     })
-      .then(r => r.json())
-      .then(data => {
-        if (data.id) onLeadCapture?.(data.id)
-        if (data.summary) setSummary(data.summary)
+      .then(async r => {
+        const data = await r.json()
+        if (!r.ok || data.error) {
+          throw new Error(data.error ?? 'Unable to save audit')
+        }
+        return data
       })
-      .catch(() => setSummary(null))
+      .then(data => {
+        const nextSummary = data.summary ?? null
+        const savedResult = data.result ?? { ...result, summary: nextSummary }
+
+        if (data.id) {
+          onAuditSaved?.({
+            id: data.id,
+            result: savedResult,
+            persisted: data.persisted === true,
+          })
+        }
+
+        if (nextSummary) setSummary(nextSummary)
+      })
+      .catch(err => {
+        console.error('[AuditResults] Failed to save audit:', err)
+        setSaveError('Unable to save your audit at the moment. Please refresh and try again.')
+      })
       .finally(() => setLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -111,7 +131,12 @@ export default function AuditResults({ result, onLeadCapture }: Props) {
       </div>
 
       {/* ── AI summary blockquote ── */}
-      {loading ? (
+      {saveError ? (
+        <div className="card border border-rose-500 bg-rose-950/20 p-4 text-rose-200 animate-fade-up">
+          <p className="font-semibold">Unable to save your audit.</p>
+          <p className="text-sm text-rose-300 mt-2">{saveError}</p>
+        </div>
+      ) : loading ? (
         <div
           className="card space-y-3"
           style={{ minHeight: '80px' }}

@@ -1,21 +1,16 @@
 // src/app/api/audit/route.ts — Create audit, save to Supabase, return UUID + summary
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { generateAuditSummary } from '@/lib/anthropicSummary'
+import { getServiceSupabaseClient } from '@/lib/supabaseClient'
 import type { AuditResult } from '@/lib/auditEngine'
-
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { randomUUID } from 'crypto'
 
 let _supabase: SupabaseClient | null = null
 function getSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) {
-    return null
-  }
   if (!_supabase) {
-    _supabase = createClient(url, key)
+    _supabase = getServiceSupabaseClient()
   }
   return _supabase
 }
@@ -41,29 +36,38 @@ export async function POST(req: NextRequest) {
       created_at: new Date().toISOString(),
     }
 
-    let auditId = randomUUID()
     const supabase = getSupabase()
+    if (!supabase) {
+      console.warn('Supabase not configured. Returning a self-contained share link fallback.')
+      return NextResponse.json({
+        id: randomUUID(),
+        summary,
+        result: resultWithSummary,
+        persisted: false,
+      })
+    }
 
-    if (supabase) {
-      const { data, error } = await supabase
-        .from('audits')
-        .insert(publicResult)
-        .select('id')
-        .single()
+    const { data, error } = await supabase
+      .from('audits')
+      .insert(publicResult)
+      .select('id')
+      .single()
 
-      if (error) {
-        console.error('Failed to insert audit into Supabase:', error)
-      } else if (data?.id) {
-        auditId = data.id
-      }
-    } else {
-      console.warn('Supabase not configured. Using fallback generated random UUID for auditId.')
+    if (error || !data?.id) {
+      console.error('Failed to insert audit into Supabase:', error)
+      return NextResponse.json({
+        id: randomUUID(),
+        summary,
+        result: resultWithSummary,
+        persisted: false,
+      })
     }
 
     return NextResponse.json({
-      id: auditId,
+      id: data.id,
       summary,
       result: resultWithSummary,
+      persisted: true,
     })
   } catch (err) {
     console.error('POST /api/audit error:', err)
